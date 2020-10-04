@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t techturnip/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true techturnip/react-test npm test
+
+after_success:
+  - docker build -t techturnip/multi-client ./client
+  - docker build -t techturnip/multi-nginx ./nginx
+  - docker build -t techturnip/multi-server ./server
+  - docker build -t techturnip/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push images to docker hub
+  - docker push techturnip/multi-client
+  - docker push techturnip/multi-nginx
+  - docker push techturnip/multi-server
+  - docker push techturnip/multi-worker
